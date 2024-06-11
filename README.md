@@ -23,3 +23,4 @@ r: Install a MongoDB replica set.
 c: Cleanup MongoDB installation.
 d: Remove MongoDB installation.
 crud: Show CRUD operations, index management, and schema information.
+====
