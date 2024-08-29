@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# MongoDB Shell Command
+MONGO_CMD="mongosh --port 27017"
+
+# Database and Collection details
+DATABASE="fileStorageDB"
+COLLECTION="files"
+SHARD_KEY="parent_id"
+
+# Enable sharding for the database
+$MONGO_CMD --eval "sh.enableSharding('$DATABASE')"
+
+# Create the collection with the specified fields
+$MONGO_CMD --eval "
+use $DATABASE;
+db.createCollection('$COLLECTION', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['parent_id', 'objectname', 'fieldA', 'fieldB'],
+      properties: {
+        parent_id: {
+          bsonType: 'string',
+          description: 'must be a string and is the file path in storage'
+        },
+        objectname: {
+          bsonType: 'string',
+          description: 'must be a string and is the name of the object'
+        },
+        fieldA: {
+          bsonType: 'string',
+          description: 'must be a string'
+        },
+        fieldB: {
+          bsonType: 'string',
+          description: 'must be a string'
+        }
+      }
+    }
+  }
+})
+"
+
+# Shard the collection using range sharding on the parent_id field
+$MONGO_CMD --eval "sh.shardCollection('$DATABASE.$COLLECTION', { $SHARD_KEY: 1 }, true)"
+
+# Create a unique composite index on parent_id, fieldA, and fieldB
+$MONGO_CMD --eval "db.$COLLECTION.createIndex({ $SHARD_KEY: 1, fieldA: 1, fieldB: 1 }, { unique: true })"
+
+# Verify the sharding status
+$MONGO_CMD --eval "sh.status()"
