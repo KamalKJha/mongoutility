@@ -1,0 +1,61 @@
+// MongoDB Shell Script
+
+// Database and Collection details
+const DATABASE = "fileStorageDB";
+const COLLECTION = "files";
+
+// Function to generate a random string
+function generateRandomString(length = 10) {
+    return Math.random().toString(36).substring(2, 2 + length);
+}
+
+// Function to generate a random file path
+function generateRandomPath() {
+    const parentDirs = ["/data/data1", "/data/data2", "/data/data3"];
+    const parentDir = parentDirs[Math.floor(Math.random() * parentDirs.length)];
+    const filename = generateRandomString() + ".txt";
+    return parentDir + "/" + filename;
+}
+
+// Switch to the database
+use(DATABASE);
+
+// Variable to hold the number of documents to insert per batch
+const BATCH_SIZE = 10000;
+
+// Total number of rows to insert
+const TOTAL_ROWS = 1000000;
+
+// Counter for inserted documents
+let insertedCount = 0;
+
+// Insert documents in batches
+while (insertedCount < TOTAL_ROWS) {
+    // Array to hold documents to insert in this batch
+    let docs = [];
+
+    // Generate and add documents to the batch
+    for (let i = 0; i < BATCH_SIZE && insertedCount < TOTAL_ROWS; i++) {
+        const parent_id = generateRandomPath();
+        const fieldA = generateRandomString();
+        const fieldB = generateRandomString();
+
+        const doc = {
+            parent_id: parent_id,
+            objectname: `Object_${insertedCount + 1}`,
+            fieldA: fieldA,
+            fieldB: fieldB
+        };
+
+        docs.push(doc);
+        insertedCount++;
+    }
+
+    // Insert the batch of documents
+    db[COLLECTION].insertMany(docs);
+
+    // Print progress
+    print(insertedCount + " documents inserted.");
+}
+
+print("1 million rows have been inserted into the collection " + COLLECTION);
